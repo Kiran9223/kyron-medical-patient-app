@@ -313,10 +313,12 @@ export default function ChatInterface() {
   const [sendHovered, setSendHovered] = useState(false)
   const [callBtnHovered, setCallBtnHovered] = useState(false)
   const [showRipple, setShowRipple] = useState(false)
+  const [showCheckingBanner, setShowCheckingBanner] = useState(false)
   const prevIntakeRef = useRef(false)
   const bottomRef = useRef(null)
   const inputRef = useRef(null)
   const pollRef = useRef(null)
+  const pollTimeoutRef = useRef(null)
 
   const cycledText = useCyclingPlaceholder()
   const placeholderText = confirmedBooking
@@ -344,23 +346,26 @@ export default function ChatInterface() {
     prevIntakeRef.current = intakeComplete
   }, [intakeComplete])
 
-  // Poll /api/voice/call-status while a call is active
-  useEffect(() => {
-    if (!callActive) {
-      if (pollRef.current) {
-        clearInterval(pollRef.current)
-        pollRef.current = null
-      }
-      return
-    }
+  // Stop all voice polling and clear the 5-minute timeout
+  const stopVoicePolling = () => {
+    if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
+    if (pollTimeoutRef.current) { clearTimeout(pollTimeoutRef.current); pollTimeoutRef.current = null }
+  }
+
+  // Start polling /api/voice/call-status every 5s.
+  // Polling is independent of overlay visibility — it runs until booking_complete
+  // or the 5-minute timeout fires.
+  const startVoicePolling = () => {
+    stopVoicePolling() // clear any previous poll before starting a new one
+    console.log('[polling] Using session ID:', sessionId)
 
     pollRef.current = setInterval(async () => {
       try {
         const res = await fetch(`${API_BASE}/api/voice/call-status/${sessionId}`)
         const data = await res.json()
         if (data.booking_complete) {
-          clearInterval(pollRef.current)
-          pollRef.current = null
+          stopVoicePolling()
+          setShowCheckingBanner(false)
           setCallActive(false)
           setConfirmedBooking(data.booking)
           confetti({
@@ -375,13 +380,17 @@ export default function ChatInterface() {
       }
     }, 5000)
 
-    return () => {
-      if (pollRef.current) {
-        clearInterval(pollRef.current)
-        pollRef.current = null
-      }
-    }
-  }, [callActive, sessionId])
+    // Auto-stop after 5 minutes if no booking detected
+    pollTimeoutRef.current = setTimeout(() => {
+      stopVoicePolling()
+      setShowCheckingBanner(false)
+    }, 5 * 60 * 1000)
+  }
+
+  // Clean up on unmount
+  useEffect(() => {
+    return () => stopVoicePolling()
+  }, [])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -407,6 +416,7 @@ export default function ChatInterface() {
       if (res.ok && data.success) {
         setShowCallModal(false)
         setCallActive(true)
+        startVoicePolling()
       } else {
         showToast('Call failed. Please try again.', 'error')
       }
@@ -452,6 +462,31 @@ export default function ChatInterface() {
               }}
             />
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── "Checking for booking" banner — shown after call ends while polling ── */}
+      <AnimatePresence>
+        {showCheckingBanner && (
+          <motion.div
+            key="checking-banner"
+            initial={{ opacity: 0, y: -16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            style={{
+              background: 'rgba(59,130,246,0.1)',
+              border: '1px solid rgba(59,130,246,0.2)',
+              borderRadius: '12px',
+              padding: '10px 16px',
+              marginBottom: '8px',
+              color: '#60A5FA',
+              fontSize: '13px',
+              textAlign: 'center',
+            }}
+          >
+            Call ended — checking for booking confirmation...
+          </motion.div>
         )}
       </AnimatePresence>
 
@@ -894,7 +929,11 @@ export default function ChatInterface() {
                 Kyra is continuing your conversation by phone. You can hang up when done.
               </div>
               <button
-                onClick={() => { setCallActive(false); setShowCallEndedCard(true) }}
+                onClick={() => {
+                  setCallActive(false)
+                  setShowCallEndedCard(true)
+                  if (pollRef.current) setShowCheckingBanner(true)
+                }}
                 className="w-full py-3 text-sm font-medium transition-all"
                 style={{
                   background: 'rgba(239,68,68,0.12)',

@@ -96,7 +96,34 @@ infrastructure/
 - Session 6 ✅ — Appointment scheduling flow complete. GET /api/appointments/slots/{session_id} matches doctor by specialty, returns slots grouped by date. POST /api/appointments/book books slot and saves confirmation. AppointmentPicker component with stagger animation, ConfirmationBanner. GET /api/debug/session/{session_id} added for testing. In-memory session store chosen deliberately for MVP. Extensible to Redis/PostgreSQL by swapping session_store.py.
 - Session 7 ✅ — Voice handoff complete. Vapi.ai outbound call initiated with full chat context passed as system prompt. Kyra speaks on the call, retains full conversation history, and can book appointments over voice. Call transcripts and recordings verified in Vapi dashboard. Carrier blocking issue documented.
 - Session 8 ✅ — Email confirmation working via SendGrid. HTML email template with Kyron Medical branding, patient name, doctor name, appointment date/time, practice address. Patient data extraction from conversation history fixed — structured fields (first_name, last_name, dob, phone, email, reason) now correctly parsed and saved to session_store. Call in progress overlay UI added with pulsing animation and end call button.
-- Session 9 🔄 — AWS + Terraform deployment next. (Note: Official Kyron Medical color scheme applied — #3B82F6 blue, #06B6D4 teal, #7C3AED purple, #111827 card background, #0A0F1E base. CSS variables in index.css. Rainbow shimmer removed.)
+- Session 9 ✅ — Deployment complete:
+  * Frontend: Vercel
+  * Backend: Railway (auto-deploys on git push)
+  * AWS EC2 + Terraform: infrastructure/ folder ready
+  * GitHub: public repo
+
+## Known Issues Being Fixed
+- Email error handling improved with full logging
+- Session ID mismatch between Vapi webhook and frontend being debugged
+- Voice call polling fixed to continue after overlay is dismissed
+
+## Deployment URLs
+- Frontend: https://kyron-medical-patient-app.vercel.app/ 
+- Backend: https://kyron-medical-patient-app-production.up.railway.app
+- GitHub: https://github.com/Kiran9223/kyron-medical-patient-app
+
+## Vapi Webhook URL
+https://kyron-medical-patient-app-production.up.railway.app/api/voice/webhook
+(configured in Vapi dashboard → Phone Numbers → Server URL)
+
+## Color Scheme (Kyron Medical Official)
+--kyron-bg: #0A0F1E
+--kyron-bg-card: #111827
+--kyron-blue: #3B82F6
+--kyron-teal: #06B6D4
+--kyron-purple: #7C3AED
+--kyron-text: #F8FAFC
+--kyron-text-muted: #94A3B8
 
 ## Rules for Claude Code
 - Always read existing files before making changes

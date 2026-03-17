@@ -54,6 +54,9 @@ async def vapi_webhook(payload: dict) -> dict[str, Any]:
         session_id = metadata.get("session_id")
         transcript = message.get("transcript", "")
 
+        print("[webhook] Full metadata:", metadata)
+        print("[webhook] Session ID from metadata:", session_id)
+
         if not session_id:
             print("[voice] No session_id in call metadata — cannot link to session")
             return {"received": True}

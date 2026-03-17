@@ -79,6 +79,8 @@ async def initiate_voice_call(session_id: str, phone_number: str) -> dict[str, o
     context = _build_call_context(session_id)
     first_name = patient_data.get("first_name", "there")
 
+    print("[voice] Passing session_id to Vapi:", session_id)
+
     payload = {
         "phoneNumberId": phone_number_id,
         "customer": {

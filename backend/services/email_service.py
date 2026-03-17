@@ -1,4 +1,5 @@
 import os
+import traceback
 
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
@@ -201,8 +202,10 @@ async def send_booking_confirmation(patient_data: dict, booking_details: dict) -
         response = sg.send(message)
         print("[email] SendGrid response status:", response.status_code)
         print("[email] SendGrid response body:", response.body)
-        print(f"[email_service] Email sent to {to_email} — status {response.status_code}")
+        print("[email] Successfully sent to:", to_email)
+        print("[email] Status code:", response.status_code)
         return True
-    except Exception as exc:
-        print(f"[email_service] Failed to send email: {exc}")
+    except Exception as e:
+        print("[email] ERROR sending email:", str(e))
+        traceback.print_exc()
         return False
