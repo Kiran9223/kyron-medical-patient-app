@@ -316,6 +316,7 @@ export default function ChatInterface() {
   const prevIntakeRef = useRef(false)
   const bottomRef = useRef(null)
   const inputRef = useRef(null)
+  const pollRef = useRef(null)
 
   const cycledText = useCyclingPlaceholder()
   const placeholderText = confirmedBooking
@@ -342,6 +343,45 @@ export default function ChatInterface() {
     }
     prevIntakeRef.current = intakeComplete
   }, [intakeComplete])
+
+  // Poll /api/voice/call-status while a call is active
+  useEffect(() => {
+    if (!callActive) {
+      if (pollRef.current) {
+        clearInterval(pollRef.current)
+        pollRef.current = null
+      }
+      return
+    }
+
+    pollRef.current = setInterval(async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/voice/call-status/${sessionId}`)
+        const data = await res.json()
+        if (data.booking_complete) {
+          clearInterval(pollRef.current)
+          pollRef.current = null
+          setCallActive(false)
+          setConfirmedBooking(data.booking)
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.8 },
+            colors: ['#3B82F6', '#06B6D4', '#7C3AED', '#ffffff'],
+          })
+        }
+      } catch {
+        // ignore transient polling errors
+      }
+    }, 5000)
+
+    return () => {
+      if (pollRef.current) {
+        clearInterval(pollRef.current)
+        pollRef.current = null
+      }
+    }
+  }, [callActive, sessionId])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })

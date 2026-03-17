@@ -121,7 +121,11 @@ async def book_appointment(
     session_store.update_patient_data(body.session_id, {"booking": confirmation})
 
     # Send confirmation email in the background — don't block the response
-    background_tasks.add_task(send_booking_confirmation, patient_data, confirmation)
+    async def _send_and_log():
+        email_result = await send_booking_confirmation(patient_data, confirmation)
+        print("[appointments] Email result:", email_result)
+
+    background_tasks.add_task(_send_and_log)
 
     return confirmation
 

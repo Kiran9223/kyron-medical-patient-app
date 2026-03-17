@@ -6,7 +6,8 @@ from fastapi import APIRouter, HTTPException
 
 from models import VoiceInitiateRequest
 import session_store
-from services import voice_service
+from services import voice_service, ai_service
+from services.email_service import send_booking_confirmation
 
 router = APIRouter()
 
@@ -32,6 +33,71 @@ async def initiate_call(body: VoiceInitiateRequest) -> dict[str, object]:
             if result["success"]
             else "Failed to initiate call. Please try again."
         ),
+    }
+
+
+@router.post("/webhook")
+async def vapi_webhook(payload: dict) -> dict[str, Any]:
+    """
+    Receive Vapi.ai webhook events.
+    On end-of-call-report: analyze transcript for booking, persist to session,
+    send confirmation email, and flag the session as voice_booking_complete.
+    """
+    message = payload.get("message", {})
+    event_type = message.get("type", "")
+
+    print(f"[voice] Webhook received: {event_type}")
+
+    if event_type == "end-of-call-report":
+        call = message.get("call", {})
+        metadata = call.get("metadata", {})
+        session_id = metadata.get("session_id")
+        transcript = message.get("transcript", "")
+
+        if not session_id:
+            print("[voice] No session_id in call metadata — cannot link to session")
+            return {"received": True}
+
+        print(f"[voice] Call ended for session {session_id}")
+        print(f"[voice] Transcript length: {len(transcript)} chars")
+
+        if transcript:
+            analysis = ai_service.analyze_call_transcript(transcript)
+            print(f"[voice] Transcript analysis: {analysis}")
+
+            if analysis.get("appointment_booked"):
+                booking = {
+                    "confirmed": True,
+                    "doctor": analysis.get("doctor_name"),
+                    "date": analysis.get("date"),
+                    "time": analysis.get("time"),
+                }
+
+                patient_data = session_store.get_patient_data(session_id)
+                session_store.update_patient_data(session_id, {
+                    "booking": booking,
+                    "voice_booking_complete": True,
+                })
+                print(f"[voice] Booking saved to session {session_id}: {booking}")
+
+                await send_booking_confirmation(patient_data, booking)
+
+    return {"received": True}
+
+
+@router.get("/call-status/{session_id}")
+async def get_voice_call_status(session_id: str) -> dict[str, Any]:
+    """
+    Poll endpoint for the frontend to check if a voice call resulted in a booking.
+    Returns booking_complete flag and booking details (if any).
+    """
+    patient_data = session_store.get_patient_data(session_id)
+    booking_complete: bool = patient_data.get("voice_booking_complete", False)
+    booking = patient_data.get("booking") if booking_complete else None
+
+    return {
+        "booking_complete": booking_complete,
+        "booking": booking,
     }
 
 

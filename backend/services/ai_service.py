@@ -125,6 +125,42 @@ def get_kyra_response(
     return clean_reply, detected_markers, extracted
 
 
+def analyze_call_transcript(transcript: str) -> dict:
+    """
+    Use Claude (Haiku) to analyze a Vapi call transcript and determine if an
+    appointment was booked.  Returns a dict with keys:
+        appointment_booked: bool
+        doctor_name: str | None
+        date: str | None
+        time: str | None
+    """
+    prompt = (
+        "Analyze this call transcript and extract if an appointment was booked. "
+        "Return JSON only:\n"
+        "{\n"
+        '  "appointment_booked": bool,\n'
+        '  "doctor_name": string or null,\n'
+        '  "date": string or null,\n'
+        '  "time": string or null\n'
+        "}\n\n"
+        f"Transcript: {transcript}"
+    )
+
+    try:
+        response = _get_client().messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=256,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        raw: str = response.content[0].text.strip()  # type: ignore[index]
+        raw = re.sub(r"^```(?:json)?\s*", "", raw)
+        raw = re.sub(r"\s*```$", "", raw)
+        return json.loads(raw)
+    except Exception as exc:
+        print(f"[ai_service] analyze_call_transcript failed: {exc}")
+        return {"appointment_booked": False, "doctor_name": None, "date": None, "time": None}
+
+
 def extract_patient_data(session_id: str) -> dict[str, str]:
     """
     Use Claude (Haiku) to extract structured patient fields from the full

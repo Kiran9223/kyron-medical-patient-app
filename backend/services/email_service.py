@@ -169,12 +169,16 @@ async def send_booking_confirmation(patient_data: dict, booking_details: dict) -
     """
     api_key = os.environ.get("SENDGRID_API_KEY", "")
     from_email = os.environ.get("SENDGRID_FROM_EMAIL", "")
+    to_email = patient_data.get("email", "")
+
+    print("[email] Attempting to send to:", to_email)
+    print("[email] From:", from_email)
+    print("[email] SendGrid API key present:", bool(api_key))
 
     if not api_key or not from_email:
         print("[email_service] Missing SENDGRID_API_KEY or SENDGRID_FROM_EMAIL — skipping email.")
         return False
 
-    to_email = patient_data.get("email", "")
     if not to_email:
         print("[email_service] No patient email in session data — skipping email.")
         return False
@@ -195,6 +199,8 @@ async def send_booking_confirmation(patient_data: dict, booking_details: dict) -
     try:
         sg = SendGridAPIClient(api_key)
         response = sg.send(message)
+        print("[email] SendGrid response status:", response.status_code)
+        print("[email] SendGrid response body:", response.body)
         print(f"[email_service] Email sent to {to_email} — status {response.status_code}")
         return True
     except Exception as exc:

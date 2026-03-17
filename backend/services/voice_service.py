@@ -84,6 +84,11 @@ async def initiate_voice_call(session_id: str, phone_number: str) -> dict[str, o
         "customer": {
             "number": formatted_phone,
         },
+        # Pass session_id in metadata so the webhook handler can link
+        # the call back to the correct session
+        "metadata": {
+            "session_id": session_id,
+        },
         "assistant": {
             "name": "Kyra",
             "model": {
