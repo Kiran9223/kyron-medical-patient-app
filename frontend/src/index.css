@@ -1,0 +1,120 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Kyron Medical design tokens ── */
+:root {
+  --kyron-bg:           #0A0F1E;
+  --kyron-bg-card:      #111827;
+  --kyron-blue:         #3B82F6;
+  --kyron-blue-bright:  #60A5FA;
+  --kyron-teal:         #06B6D4;
+  --kyron-purple:       #7C3AED;
+  --kyron-purple-light: #8B5CF6;
+  --kyron-text:         #F8FAFC;
+  --kyron-text-muted:   #94A3B8;
+  --kyron-border:       rgba(255, 255, 255, 0.08);
+}
+
+/* ── Aurora background ── */
+@keyframes aurora1 {
+  0%   { transform: translate(0px, 0px) scale(1); }
+  33%  { transform: translate(80px, -60px) scale(1.08); }
+  66%  { transform: translate(-50px, 80px) scale(0.94); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+@keyframes aurora2 {
+  0%   { transform: translate(0px, 0px) scale(1); }
+  33%  { transform: translate(-90px, 70px) scale(0.96); }
+  66%  { transform: translate(70px, -60px) scale(1.06); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+@keyframes aurora3 {
+  0%   { transform: translate(-50%, 0px) scale(1); }
+  50%  { transform: translate(-50%, 90px) scale(1.1); }
+  100% { transform: translate(-50%, 0px) scale(1); }
+}
+
+.aurora-blob {
+  position: fixed;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.15;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* ── Kyra avatar pulse ring when typing ── */
+@keyframes avatarPulse {
+  0%   { box-shadow: 0 0 0 0    rgba(59, 130, 246, 0.5); }
+  70%  { box-shadow: 0 0 0 12px rgba(59, 130, 246, 0);   }
+  100% { box-shadow: 0 0 0 0    rgba(59, 130, 246, 0);   }
+}
+.avatar-pulse-ring {
+  animation: avatarPulse 1.5s ease-out infinite;
+}
+
+/* ── Splash screen logo pulse ── */
+@keyframes logoPulse {
+  0%, 100% { opacity: 1;    transform: scale(1);    }
+  50%       { opacity: 0.72; transform: scale(1.05); }
+}
+
+/* ── Call Instead button breathing glow ── */
+@keyframes breatheGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3), 0 4px 12px rgba(0, 0, 0, 0.3); }
+  50%       { box-shadow: 0 0 35px rgba(59, 130, 246, 0.6), 0 4px 12px rgba(0, 0, 0, 0.3); }
+}
+.call-btn-glow {
+  animation: breatheGlow 2s ease-in-out infinite;
+}
+
+/* ── Hide scrollbars globally ── */
+* {
+  scrollbar-width: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Appointment panel "Ready" badge pulse ── */
+@keyframes readyPulse {
+  0%, 100% { opacity: 1;   }
+  50%       { opacity: 0.5; }
+}
+.ready-badge-pulse {
+  animation: readyPulse 2s ease-in-out infinite;
+}
+
+/* ── Message bubble tails ── */
+.kyra-bubble {
+  position: relative;
+}
+.kyra-bubble::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  bottom: 9px;
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-right: 7px solid #111827;
+  border-bottom: 3px solid transparent;
+}
+
+.patient-bubble {
+  position: relative;
+}
+.patient-bubble::before {
+  content: '';
+  position: absolute;
+  right: -5px;
+  bottom: 9px;
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-left: 7px solid #3B82F6;
+  border-bottom: 3px solid transparent;
+}

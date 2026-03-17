@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+anthropic
+sendgrid
+twilio
+python-dotenv
+pydantic
+httpx
