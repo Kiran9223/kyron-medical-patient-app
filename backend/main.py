@@ -6,11 +6,14 @@ from routers import chat, appointments, notifications, voice, debug
 
 load_dotenv()
 
-app = FastAPI(title="Kyron Medical API")
+app = FastAPI(title="Kyron Medical App")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "https://kyron-medical-patient-app.vercel.app",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
